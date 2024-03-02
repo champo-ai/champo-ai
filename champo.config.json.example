@@ -1,0 +1,10 @@
+{
+  "translationFolder": "./translations",
+  "inputLang": "fr-FR",
+  "outputLang": ["en-US", "es-ES", "it-IT"],
+
+  // optionnal config
+  "excludedFiles": ["file_excluded.ts"],
+  "includedFiles": ["file_to_translate.json"],
+  "generatedLangFolderPrefix": "ai-generated_",
+}

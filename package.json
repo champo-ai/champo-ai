@@ -1,0 +1,26 @@
+{
+  "name": "champollion-ai",
+  "version": "1.2.1",
+  "description": "A package to translate i18n file with AI",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Gabriel FRANCK",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/champollion-ai/champollion-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/champollion-ai/champollion-ai/issues"
+  },
+  "homepage": "https://champollion.ai",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.6.7"
+  },
+  "bin": {
+    "champo": "index.js"
+  }
+}
