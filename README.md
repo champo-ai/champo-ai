@@ -12,9 +12,9 @@
 - Install package
 
 ```sh
-npm i champollion-ai
+npm i champo-ai
 # or
-yarn add champollion-ai
+yarn add champo-ai
 ```
 
 - Create a champo.config.json at root of your project

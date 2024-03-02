@@ -1,6 +1,6 @@
 {
-  "name": "champollion-ai",
-  "version": "1.2.1",
+  "name": "champo-ai",
+  "version": "1.0.0",
   "description": "A package to translate i18n file with AI",
   "main": "index.js",
   "scripts": {
@@ -10,10 +10,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/champollion-ai/champollion-ai.git"
+    "url": "git+https://github.com/champo-ai/champo-ai.git"
   },
   "bugs": {
-    "url": "https://github.com/champollion-ai/champollion-ai/issues"
+    "url": "https://github.com/champo-ai/champo-ai/issues"
   },
   "homepage": "https://champollion.ai",
   "type": "module",
