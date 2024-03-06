@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 import * as fs from 'fs'
 import axios from 'axios'
+import { encode } from 'gpt-tokenizer'
+import promptSync from 'prompt-sync'
 
 let totalCost = 0
+let tokenLimit = 4000
 let config
 let generatedLangFolderPrefix
 
@@ -22,7 +25,7 @@ const writeFile = (fileName, content, langWanted) => {
   })
 }
 
-const translatteFileData = async (inputData, fileName, ) => {
+const translateFileData = async (inputData, fileName) => {
   for (let outputLang of config.outputLang) {
     try {
       const result = await axios.post('https://api.champollion.ai/translate', {
@@ -65,34 +68,102 @@ const translatteFileData = async (inputData, fileName, ) => {
   console.log(' ')
 }
 
+const filePrice = (modelUsed, tokenLength) => {
+  const gptInputTokenPrice = modelUsed === 'gpt-4-turbo-preview' ? 0.125 : 0.025
+  const gptOutputTokenPrice =
+    modelUsed === 'gpt-4-turbo-preview' ? 0.375 : 0.075
+
+  return tokenLength > 0
+    ? (tokenLength + 134) * (gptInputTokenPrice / 1000) +
+        tokenLength * (gptOutputTokenPrice / 1000)
+    : 0
+}
+
 async function main() {
   fs.readdir(
     `${config.translationFolder}/${config.inputLang}`,
     async (err, files) => {
       if (err) throw err
 
+      let erroredFilesMessage = []
+      let previewedTotalCost = 0
       for (let file of files) {
         let isIncluded
         if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
           isIncluded = true
         if (config?.includedFiles && (config?.includedFiles).includes(file))
           isIncluded = true
+        if (!config?.includedFiles && !config?.excludedFiles) isIncluded = true
 
         if (isIncluded) {
           const fileName = file
           const filePath =
-          `${config.translationFolder}/${config.inputLang}/` + fileName
+            `${config.translationFolder}/${config.inputLang}/` + fileName
           const fileData = fs.readFileSync(filePath, 'utf-8')
-          
 
           const inputData = fileData
+          const tokens = encode(inputData)
 
-          console.log(fileName + ' - STARTED')
-          await translatteFileData(inputData, fileName)
+          previewedTotalCost +=
+            filePrice('gpt-3.5-turbo', tokens.length) * config.outputLang.length
+
+          if (tokens.length + 134 > tokenLimit) {
+            erroredFilesMessage.push(
+              fileName + ' is ' + (tokens.length + 134) + ' tokens length.',
+            )
+          }
         }
       }
 
-      console.log('TOTAL Cost : ' + totalCost.toFixed(5) + '$')
+      if (erroredFilesMessage.length > 0) {
+        erroredFilesMessage.map((item) => console.log(item))
+        console.log('')
+        throw new Error(
+          `Some files exceed token limit (${tokenLimit} tokens), see listed files above:`,
+        )
+      } else {
+        const prompt = promptSync()
+        let resultPrompt = prompt(
+          `Translate ${files.length} files in ${
+            config.outputLang.length
+          } lang for ~${previewedTotalCost.toFixed(2)}€ (Y/n):`,
+        )
+
+        if (
+          resultPrompt === 'y' ||
+          resultPrompt === 'Y' ||
+          resultPrompt === ''
+        ) {
+          for (let file of files) {
+            let isIncluded
+            if (
+              config?.excludedFiles &&
+              !(config?.excludedFiles).includes(file)
+            )
+              isIncluded = true
+            if (config?.includedFiles && (config?.includedFiles).includes(file))
+              isIncluded = true
+            if (!config?.includedFiles && !config?.excludedFiles)
+              isIncluded = true
+
+            if (isIncluded) {
+              const fileName = file
+              const filePath =
+                `${config.translationFolder}/${config.inputLang}/` + fileName
+              const fileData = fs.readFileSync(filePath, 'utf-8')
+
+              const inputData = fileData
+
+              console.log('')
+              console.log(fileName + ' - STARTED')
+              await translateFileData(inputData, fileName)
+            }
+          }
+          console.log('TOTAL Cost : ' + totalCost.toFixed(5) + '$')
+        } else {
+          console.log('Exited')
+        }
+      }
     },
   )
 }
