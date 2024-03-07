@@ -28,7 +28,7 @@ const writeFile = (fileName, content, langWanted) => {
 const translateFileData = async (inputData, fileName) => {
   for (let outputLang of config.outputLang) {
     try {
-      const result = await axios.post('https://api.champollion.ai/translate', {
+      const result = await axios.post('https://api.champo.ai/translate', {
         inputData,
         inputLang: config.inputLang,
         outputLang: outputLang,
