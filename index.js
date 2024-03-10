@@ -87,6 +87,7 @@ async function main() {
 
       let erroredFilesMessage = []
       let previewedTotalCost = 0
+      let fileCount = 0
       for (let file of files) {
         let isIncluded
         if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
@@ -103,7 +104,8 @@ async function main() {
 
           const inputData = fileData
           const tokens = encode(inputData)
-
+          
+          fileCount += 1
           previewedTotalCost +=
             filePrice('gpt-3.5-turbo', tokens.length) * config.outputLang.length
 
@@ -124,7 +126,7 @@ async function main() {
       } else {
         const prompt = promptSync()
         let resultPrompt = prompt(
-          `Translate ${files.length} files in ${
+          `Translate ${fileCount} files in ${
             config.outputLang.length
           } lang for ~${previewedTotalCost.toFixed(2)}€ (Y/n):`,
         )
@@ -161,6 +163,7 @@ async function main() {
           }
           console.log('TOTAL Cost : ' + totalCost.toFixed(5) + '$')
         } else {
+          console.log('')
           console.log('Exited')
         }
       }
