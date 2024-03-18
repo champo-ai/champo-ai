@@ -1,9 +1,9 @@
 <!-- Banner Image -->
 
 <p align="center">
-  <a href="https://champollion.ai/">
-    <img alt="ChampollionAI" height="128" src="https://www.champollion.ai/logo512.png">
-    <h1 align="center">Seamlessly Translate and Maintain your Apps with ChampollionAI</h1>
+  <a href="https://champo.ai/">
+    <img alt="ChampoAI" height="128" src="https://www.champollion.ai/logo512.png">
+    <h1 align="center">Seamlessly Translate and Maintain your Apps with ChampoAI</h1>
   </a>
 </p>
 
@@ -35,7 +35,7 @@ yarn add champo-ai
 - Export your api key
 
 ```sh
-export CHAMPOLLION_API_KEY=your_api_key # replace with yours
+export CHAMPO_API_KEY=your_api_key # replace with yours
 ```
 
 - Run translation script

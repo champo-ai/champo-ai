@@ -33,7 +33,7 @@ const translateFileData = async (inputData, fileName) => {
         inputLang: config.inputLang,
         outputLang: outputLang,
         filename: fileName,
-        apiKey: process.env.CHAMPOLLION_API_KEY,
+        apiKey: process.env.CHAMPO_API_KEY,
       })
 
       totalCost += result.data.cost
@@ -180,9 +180,9 @@ if (process.argv.includes('translate')) {
     )
   }
 
-  if (!process.env.CHAMPOLLION_API_KEY)
+  if (!process.env.CHAMPO_API_KEY)
     throw new Error(
-      "Can't find CHAMPOLLION_API_KEY. Please generate one at https://champollion.ai",
+      "Can't find CHAMPO_API_KEY. Please generate one at https://champollion.ai",
     )
   if (!config.translationFolder)
     throw new Error('Error missing field in config file: translationFolder')
