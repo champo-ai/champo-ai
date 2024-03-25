@@ -76,7 +76,7 @@ const createFileChunks = (inputData, fileName) => {
 const translateFileData = async (inputData, fileName) => {
   for (let outputLang of config.outputLang) {
     try {
-      const result = await axios.post("http://localhost:3050/translate", {
+      const result = await axios.post("https://api.champo.ai/translate", {
         inputData,
         inputLang: config.inputLang,
         outputLang: outputLang,
@@ -249,7 +249,7 @@ const translateFileChunk = async (
       ")"
   )
   try {
-    const result = await axios.post("http://localhost:3050/translate_chunk", {
+    const result = await axios.post("https://api.champo.ai/translate_chunk", {
       inputData,
       inputLang: config.inputLang,
       outputLang: outputLang,
