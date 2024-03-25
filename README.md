@@ -22,6 +22,9 @@ yarn add champo-ai
 ```json
 {
   "translationFolder": "./translations",
+  // OR
+  "sourceFile": "./translations/fr-FR.json",
+  
   "inputLang": "fr-FR",
   "outputLang": ["en-US", "es-ES", "it-IT"],
   
