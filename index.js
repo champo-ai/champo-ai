@@ -481,6 +481,13 @@ if (process.argv.includes("translate")) {
 }
 
 const countKeys = () => {
+  if (config.outputLang.length > 1) {
+    console.log(config.outputLang.length + " Languages selected")
+  } else {
+    console.log(config.outputLang.length + " Languages selected")
+  }
+  console.log()
+
   if (config.sourceFile) {
     const fileName = config.sourceFile.replace(/^.*[\\/]/, "")
     const filePath = config.sourceFile
@@ -562,7 +569,9 @@ const countKeys = () => {
 
         console.log("")
         console.log(
-          "Total cost preview per language: " +
+          "Total cost preview for " +
+            config.outputLang.length +
+            " language: " +
             previewedTotalCost.toFixed(5) +
             "€"
         )
