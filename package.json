@@ -1,6 +1,6 @@
 {
   "name": "champo-ai",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "A package to translate i18n file with AI",
   "main": "index.js",
   "scripts": {

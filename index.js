@@ -479,3 +479,125 @@ if (process.argv.includes("translate")) {
   process.stdout.write(generatedLangFolderPrefix + "\n")
   main()
 }
+
+const countKeys = () => {
+  if (config.sourceFile) {
+    const fileName = config.sourceFile.replace(/^.*[\\/]/, "")
+    const filePath = config.sourceFile
+    const fileData = fs.readFileSync(filePath, "utf-8")
+
+    const tokens = encode(fileData)
+    let totalKeys = 0
+    let previewedTotalCost =
+      filePrice("gpt-3.5-turbo", tokens.length) * config.outputLang.length
+
+    try {
+      const flat_result = flattie(JSON.parse(inputData))
+      totalKeys += Object.entries(flat_result).length
+    } catch (error) {
+      console.log(
+        "Can't count keys from " + fileName + " as it is not JSON formatted"
+      )
+    }
+
+    console.log("")
+    console.log("Total cost preview: " + previewedTotalCost)
+    console.log("Total keys: " + totalKeys)
+  }
+
+  if (config.translationFolder) {
+    let totalKeys = 0
+    fs.readdir(
+      `${config.translationFolder}/${config.inputLang}`,
+      async (err, files) => {
+        let previewedTotalCost = 0
+        let fileCount = 0
+
+        for (let file of files) {
+          let isIncluded = false
+          if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
+            isIncluded = true
+          if (config?.includedFiles && (config?.includedFiles).includes(file))
+            isIncluded = true
+          if (!config?.includedFiles && !config?.excludedFiles)
+            isIncluded = true
+
+          if (isIncluded) {
+            const fileName = file
+            const filePath =
+              `${config.translationFolder}/${config.inputLang}/` + fileName
+            const fileData = fs.readFileSync(filePath, "utf-8")
+
+            const inputData = fileData
+            const tokens = encode(inputData)
+            fileCount += 1
+            const fileCost =
+              filePrice("gpt-3.5-turbo", tokens.length) *
+              config.outputLang.length
+            previewedTotalCost += fileCost
+
+            try {
+              const flat_result = flattie(JSON.parse(inputData))
+              const fileKeys = Object.entries(flat_result).length
+              totalKeys = totalKeys + Number(fileKeys || 0)
+              console.log(
+                fileName +
+                  " - cost preview: " +
+                  fileCost.toFixed(5) +
+                  "€" +
+                  " - keys: " +
+                  fileKeys
+              )
+            } catch (error) {
+              console.log(
+                fileName +
+                  " - cost preview: " +
+                  fileCost.toFixed(5) +
+                  "€" +
+                  " - Not parsed cause it is not JSON "
+              )
+            }
+          }
+        }
+
+        console.log("")
+        console.log(
+          "Total cost preview per language: " +
+            previewedTotalCost.toFixed(5) +
+            "€"
+        )
+        console.log("Total JSON keys: " + totalKeys)
+      }
+    )
+  }
+}
+
+if (process.argv.includes("preview")) {
+  try {
+    config = JSON.parse(fs.readFileSync("./champo.config.json", "utf8"))
+  } catch (error) {
+    throw new Error(
+      "Error parsing config file. Have you created a ./champo.config.json config file ?"
+    )
+  }
+
+  if (!config.translationFolder && !config.sourceFile)
+    throw new Error(
+      "Error missing field in config file: translationFolder OR sourceFile"
+    )
+  if (config.translationFolder && config.sourceFile)
+    throw new Error(
+      "Error in config file: translationFolder AND sourceFile are both set"
+    )
+  if (!config.inputLang)
+    throw new Error("Error missing field in config file: inputLang")
+  if (config?.excludedFiles && config?.includedFiles)
+    throw new Error(
+      "Can't set excludedFiles AND includedFiles in champo.config.json"
+    )
+
+  // generatedLangFolderPrefix = config?.generatedLangFolderPrefix || ""
+
+  // process.stdout.write(generatedLangFolderPrefix + "\n")
+  countKeys()
+}
