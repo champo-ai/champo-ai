@@ -611,11 +611,11 @@ if (process.argv.includes("preview")) {
   previewCost()
 }
 
-const pushFiles = () => {
+const pushFiles = async () => {
   if (config.outputLang.length > 1) {
-    console.log(config.outputLang.length + " Languages selected")
+    console.log(1 + config.outputLang.length + " Languages selected")
   } else {
-    console.log(config.outputLang.length + " Languages selected")
+    console.log(1 + config.outputLang.length + " Languages selected")
   }
   console.log()
 
@@ -641,80 +641,130 @@ const pushFiles = () => {
 
   if (config.translationFolder) {
     let totalKeys = 0
-    fs.readdir(
-      `${config.translationFolder}/${config.inputLang}`,
-      async (err, files) => {
-        let fileCount = 0
+    const inputFiles = fs.readdirSync(
+      `${config.translationFolder}/${config.inputLang}`
+    )
+    let fileCount = 0
 
-        for (let file of files) {
-          let isIncluded = false
-          if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
-            isIncluded = true
-          if (config?.includedFiles && (config?.includedFiles).includes(file))
-            isIncluded = true
-          if (!config?.includedFiles && !config?.excludedFiles)
-            isIncluded = true
+    for (let file of inputFiles) {
+      let isIncluded = false
+      if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
+        isIncluded = true
+      if (config?.includedFiles && (config?.includedFiles).includes(file))
+        isIncluded = true
+      if (!config?.includedFiles && !config?.excludedFiles) isIncluded = true
 
-          if (isIncluded) {
-            const fileName = file
-            const filePath =
-              `${config.translationFolder}/${config.inputLang}/` + fileName
-            const fileData = fs.readFileSync(filePath, "utf-8")
+      if (isIncluded) {
+        const fileName = file
+        const filePath =
+          `${config.translationFolder}/${config.inputLang}/` + fileName
+        const fileData = fs.readFileSync(filePath, "utf-8")
 
-            fileCount += 1
+        fileCount += 1
 
-            try {
-              const flat_result = flattie(JSON.parse(fileData))
-              const fileKeys = Object.entries(flat_result).length
-              totalKeys = totalKeys + Number(fileKeys || 0)
-              console.log(
-                fileName + " - cost preview: " + " - keys: " + fileKeys
-              )
+        try {
+          const flat_result = flattie(JSON.parse(fileData))
+          const fileKeys = Object.entries(flat_result).length
+          totalKeys = totalKeys + Number(fileKeys || 0)
+          console.log(
+            fileName + " - " + config.inputLang + " - keys: " + fileKeys
+          )
 
-              const newkeys = Object.entries(flat_result).map(
-                ([key, value]) => {
-                  return { name: key, lang: config.inputLang, value: value }
+          const newkeys = Object.entries(flat_result).map(([key, value]) => {
+            return { name: key, lang: config.inputLang, value: value }
+          })
+
+          let chunks = []
+          let indexChunk = 0
+          for (let i = 0; i < newkeys.length; i += 50) {
+            chunks.push(newkeys.slice(indexChunk * 50, (indexChunk + 1) * 50))
+            indexChunk += 1
+          }
+
+          for (let chunk of chunks) {
+            const result = await axios.post(
+              "http://localhost:3050/project/" +
+                config?.projectName +
+                "/import_file",
+              {
+                lang: config.inputLang, // temp
+                projectName: config?.projectName,
+                filename: fileName,
+                newkeys: chunk,
+                apiKey: process.env.CHAMPO_API_KEY,
+              }
+            )
+          }
+        } catch (error) {
+          console.log(fileName + " - Not handled cause it is not JSON ")
+        }
+      }
+    }
+
+    for (let outputLang of config.outputLang) {
+      const outputFiles = fs.readdirSync(
+        `${config.translationFolder}/${outputLang}`
+      )
+
+      let fileCount = 0
+
+      for (let file of outputFiles) {
+        let isIncluded = false
+        if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
+          isIncluded = true
+        if (config?.includedFiles && (config?.includedFiles).includes(file))
+          isIncluded = true
+        if (!config?.includedFiles && !config?.excludedFiles) isIncluded = true
+
+        if (isIncluded) {
+          const fileName = file
+          const filePath =
+            `${config.translationFolder}/${outputLang}/` + fileName
+          const fileData = fs.readFileSync(filePath, "utf-8")
+
+          fileCount += 1
+
+          try {
+            const flat_result = flattie(JSON.parse(fileData))
+            const fileKeys = Object.entries(flat_result).length
+            totalKeys = totalKeys + Number(fileKeys || 0)
+            console.log(fileName + " - " + outputLang + " - keys: " + fileKeys)
+
+            const newkeys = Object.entries(flat_result).map(([key, value]) => {
+              return { name: key, lang: outputLang, value: value }
+            })
+
+            let chunks = []
+            let indexChunk = 0
+            for (let i = 0; i < newkeys.length; i += 50) {
+              chunks.push(newkeys.slice(indexChunk * 50, (indexChunk + 1) * 50))
+              indexChunk += 1
+            }
+
+            for (let chunk of chunks) {
+              const result = await axios.post(
+                "http://localhost:3050/project/" +
+                  config?.projectName +
+                  "/import_file",
+                {
+                  lang: outputLang, // temp
+                  projectName: config?.projectName,
+                  filename: fileName,
+                  newkeys: chunk,
+                  apiKey: process.env.CHAMPO_API_KEY,
+                  is_from_ai: true
                 }
               )
-
-              console.log(newkeys.length)
-              let chunks = []
-              let indexChunk = 0
-              for (let i = 0; i < newkeys.length; i += 50) {
-                chunks.push(
-                  newkeys.slice(indexChunk * 50, (indexChunk + 1) * 50)
-                )
-                indexChunk += 1
-              }
-              console.log(chunks.length)
-
-              for (let chunk of chunks) {
-                console.log(chunk.length)
-                const result = await axios.post(
-                  "http://localhost:3050/project/" +
-                    config?.projectName +
-                    "/import_file",
-                  {
-                    lang: config.inputLang, // temp
-                    projectName: config?.projectName,
-                    filename: fileName,
-                    newkeys: chunk,
-                    apiKey: process.env.CHAMPO_API_KEY,
-                  }
-                )
-
-                console.log(result.data)
-              }
-            } catch (error) {
-              console.log(fileName + " - Not handled cause it is not JSON ")
             }
+          } catch (error) {
+            console.log(fileName + " - Not handled cause it is not JSON ")
           }
         }
-
-        console.log("")
-        console.log("Total JSON keys: " + totalKeys)
       }
-    )
+    }
+
+    console.log("")
+    console.log("Total JSON keys: " + totalKeys)
   }
 }
 
