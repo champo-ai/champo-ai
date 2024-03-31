@@ -76,7 +76,7 @@ const createFileChunks = (inputData, fileName) => {
 const translateFileData = async (inputData, fileName) => {
   for (let outputLang of config.outputLang) {
     try {
-      const result = await axios.post("https://api.champo.ai/translate", {
+      const result = await axios.post("http://localhost:3050/translate", {
         inputData,
         inputLang: config.inputLang,
         outputLang: outputLang,
@@ -249,7 +249,7 @@ const translateFileChunk = async (
       ")"
   )
   try {
-    const result = await axios.post("https://api.champo.ai/translate_chunk", {
+    const result = await axios.post("http://localhost:3050/translate_chunk", {
       inputData,
       inputLang: config.inputLang,
       outputLang: outputLang,
@@ -480,7 +480,7 @@ if (process.argv.includes("translate")) {
   main()
 }
 
-const countKeys = () => {
+const previewCost = () => {
   if (config.outputLang.length > 1) {
     console.log(config.outputLang.length + " Languages selected")
   } else {
@@ -608,5 +608,142 @@ if (process.argv.includes("preview")) {
   // generatedLangFolderPrefix = config?.generatedLangFolderPrefix || ""
 
   // process.stdout.write(generatedLangFolderPrefix + "\n")
-  countKeys()
+  previewCost()
+}
+
+const pushFiles = () => {
+  if (config.outputLang.length > 1) {
+    console.log(config.outputLang.length + " Languages selected")
+  } else {
+    console.log(config.outputLang.length + " Languages selected")
+  }
+  console.log()
+
+  if (config.sourceFile) {
+    const fileName = config.sourceFile.replace(/^.*[\\/]/, "")
+    const filePath = config.sourceFile
+    const fileData = fs.readFileSync(filePath, "utf-8")
+
+    let totalKeys = 0
+
+    try {
+      const flat_result = flattie(JSON.parse(fileData))
+      totalKeys += Object.entries(flat_result).length
+    } catch (error) {
+      console.log(
+        "Can't count keys from " + fileName + " as it is not JSON formatted"
+      )
+    }
+
+    console.log("")
+    console.log("Total keys: " + totalKeys)
+  }
+
+  if (config.translationFolder) {
+    let totalKeys = 0
+    fs.readdir(
+      `${config.translationFolder}/${config.inputLang}`,
+      async (err, files) => {
+        let fileCount = 0
+
+        for (let file of files) {
+          let isIncluded = false
+          if (config?.excludedFiles && !(config?.excludedFiles).includes(file))
+            isIncluded = true
+          if (config?.includedFiles && (config?.includedFiles).includes(file))
+            isIncluded = true
+          if (!config?.includedFiles && !config?.excludedFiles)
+            isIncluded = true
+
+          if (isIncluded) {
+            const fileName = file
+            const filePath =
+              `${config.translationFolder}/${config.inputLang}/` + fileName
+            const fileData = fs.readFileSync(filePath, "utf-8")
+
+            fileCount += 1
+
+            try {
+              const flat_result = flattie(JSON.parse(fileData))
+              const fileKeys = Object.entries(flat_result).length
+              totalKeys = totalKeys + Number(fileKeys || 0)
+              console.log(
+                fileName + " - cost preview: " + " - keys: " + fileKeys
+              )
+
+              const newkeys = Object.entries(flat_result).map(
+                ([key, value]) => {
+                  return { name: key, lang: config.inputLang, value: value }
+                }
+              )
+
+              console.log(newkeys.length)
+              let chunks = []
+              let indexChunk = 0
+              for (let i = 0; i < newkeys.length; i += 50) {
+                chunks.push(
+                  newkeys.slice(indexChunk * 50, (indexChunk + 1) * 50)
+                )
+                indexChunk += 1
+              }
+              console.log(chunks.length)
+
+              for (let chunk of chunks) {
+                console.log(chunk.length)
+                const result = await axios.post(
+                  "http://localhost:3050/project/" +
+                    config?.projectName +
+                    "/import_file",
+                  {
+                    lang: config.inputLang, // temp
+                    projectName: config?.projectName,
+                    filename: fileName,
+                    newkeys: chunk,
+                    apiKey: process.env.CHAMPO_API_KEY,
+                  }
+                )
+
+                console.log(result.data)
+              }
+            } catch (error) {
+              console.log(fileName + " - Not handled cause it is not JSON ")
+            }
+          }
+        }
+
+        console.log("")
+        console.log("Total JSON keys: " + totalKeys)
+      }
+    )
+  }
+}
+
+if (process.argv.includes("push")) {
+  try {
+    config = JSON.parse(fs.readFileSync("./champo.config.json", "utf8"))
+  } catch (error) {
+    throw new Error(
+      "Error parsing config file. Have you created a ./champo.config.json config file ?"
+    )
+  }
+
+  if (!config.translationFolder && !config.sourceFile)
+    throw new Error(
+      "Error missing field in config file: translationFolder OR sourceFile"
+    )
+  if (config.translationFolder && config.sourceFile)
+    throw new Error(
+      "Error in config file: translationFolder AND sourceFile are both set"
+    )
+  if (!config.inputLang)
+    throw new Error("Error missing field in config file: inputLang")
+  if (config?.excludedFiles && config?.includedFiles)
+    throw new Error(
+      "Can't set excludedFiles AND includedFiles in champo.config.json"
+    )
+
+  // generatedLangFolderPrefix = config?.generatedLangFolderPrefix || ""
+
+  // process.stdout.write(generatedLangFolderPrefix + "\n")
+  pushFiles()
 }
