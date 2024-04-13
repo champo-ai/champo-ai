@@ -1,7 +1,7 @@
 {
   "name": "champo-ai",
-  "version": "1.3.4",
-  "description": "A package to translate i18n file with AI",
+  "version": "1.4.0",
+  "description": "A package to translate i18n files with AI",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,6 +25,6 @@
     "prompt-sync": "^4.2.0"
   },
   "bin": {
-    "champo": "index.js"
+    "champo": "./src/index.js"
   }
 }

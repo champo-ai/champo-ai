@@ -1,13 +1,18 @@
 {
+  "projectName": "ChampoAI PROJECT NAME",
+  
   "translationFolder": "./translations",
   // OR
   "sourceFile": "./translations/fr-FR.json",
 
-  "inputLang": "fr-FR",
-  "outputLang": ["en-US", "es-ES", "it-IT"],
-
-  // optionnal config
-  "excludedFiles": ["file_excluded.ts"],
+ // required only if you use "npx champo raw-translation"
+  "sourceLang": "fr-FR",
+  "targetLangs": ["en-US", "es-ES", "it-IT"]
+  
+  // optionnal (prefix to avoid file replacement) 
+  "aiGeneratedPrefix": "ai-generated_",
+  
+  // optionnal (only have effect if "translationFolder" is set)
+  "excludedFiles": ["file_to_exclude.ts"],
   "includedFiles": ["file_to_translate.json"],
-  "generatedLangFolderPrefix": "ai-generated_",
 }

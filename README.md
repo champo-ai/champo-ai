@@ -25,13 +25,13 @@ yarn add champo-ai
   // OR
   "sourceFile": "./translations/fr-FR.json",
   
-  "inputLang": "fr-FR",
+  "sourceLang": "fr-FR",
   "outputLang": ["en-US", "es-ES", "it-IT"],
   
   // optionnal
   "excludedFiles": ["file_excluded.ts"],
   "includedFiles": ["file_to_translate.json"],
-  "generatedLangFolderPrefix": "ai-generated_"
+  "aiGeneratedPrefix": "ai-generated_"
 }
 ```
 
@@ -47,4 +47,4 @@ export CHAMPO_API_KEY=your_api_key # replace with yours
 npx champo translate
 ```
 
-It will translate all files in ./{translationFolder}/{inputLang} in desired languages automatically.
+It will translate all files in ./{translationFolder}/{sourceLang} in desired languages automatically.
