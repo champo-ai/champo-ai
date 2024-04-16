@@ -8,7 +8,7 @@ const langCount = (projectLangProgressions, lang) => {
   if (projectLang) {
     return projectLangProgressions?.find((i) => i.lang === lang)
   } else {
-    return { valid: 0, ai_generated: 0 }
+    return { valid: 0, ai_generated: 0, source_modified: 0 }
   }
 }
 
@@ -21,10 +21,10 @@ const langFileCount = (projectLangProgressions, lang, file_id) => {
     if (currentFile) {
       return currentFile
     } else {
-      return { valid: 0, ai_generated: 0 }
+      return { valid: 0, ai_generated: 0, source_modified: 0 }
     }
   } else {
-    return { valid: 0, ai_generated: 0 }
+    return { valid: 0, ai_generated: 0, source_modified: 0 }
   }
 }
 
@@ -38,7 +38,11 @@ const totalFileKeys = (projectLangProgressions, sourceLang, file_id) => {
       (file) => file.file_id === file_id
     )
     if (currentFile) {
-      return currentFile.ai_generated + currentFile.valid
+      return (
+        currentFile.ai_generated +
+        currentFile.valid +
+        currentFile.source_modified
+      )
     } else {
       return 0
     }
@@ -158,7 +162,9 @@ export const translate = async (config) => {
       (i) => i.lang === projectData.data.sourceLang.lang
     )
     const totalKeys =
-      sourceLangProgression.valid + sourceLangProgression.ai_generated
+      sourceLangProgression.valid +
+      sourceLangProgression.ai_generated +
+      sourceLangProgression.source_modified
     const outputLangs = projectData.data.projectLangs.filter(
       (i) => i.is_source_lang === false
     )
